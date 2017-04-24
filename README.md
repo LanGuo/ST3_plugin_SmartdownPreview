@@ -1,4 +1,4 @@
-# plugin for sublime text 3 for previewing Smartdown content during editing
+# sublime text 3 plugin for previewing Smartdown content during editing
 Using http://smartdown.site to render content by encoding content as base64 data:URI string.
 
 Installation:
