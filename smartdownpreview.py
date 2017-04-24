@@ -1,5 +1,5 @@
-# Based on OpenInBrowser: https://bitbucket.org/bteryek/openinbrowser
-# On save opens up a user defined URL
+# Author: Lan Guo, Dan Keith
+# Plug-in for sublime text 3, opens up a user defined URL for preview Smartdown content
 # To enable SmartDown rendering, opens up http://smartdown.site using the 'url=' feature, embed data in a data URI
 
 import sublime, sublime_plugin, webbrowser, base64
