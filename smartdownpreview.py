@@ -2,7 +2,10 @@
 # Plug-in for sublime text 3, opens up a user defined URL for preview Smartdown content
 # To enable SmartDown rendering, opens up http://smartdown.site using the 'url=' feature, embed data in a data URI
 
-import sublime, sublime_plugin, webbrowser, base64
+import sublime
+import sublime_plugin
+import webbrowser
+import base64
 
 class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.EventListener):
 
@@ -20,14 +23,14 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 		else:
 			self.log('This file is not SmartDown format!')
 			pass
-	
+
 
 	def generate_url(self):
 		# This is the base url for opening a smartdown preview on smartdown.site
 		# This is hard coded!
 		base_url = 'http://smartdown.site/?url=data:text/plain;charset=utf-8;base64,'
-		data_uri = self.convert_current_file_to_uri()	
-		url = base_url + data_uri	
+		data_uri = self.convert_current_file_to_uri()
+		url = base_url + data_uri
 		return url
 
 	def convert_current_file_to_uri(self):
@@ -41,7 +44,7 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 
 	def openUrl(self, url):
 		self.log('Opening '+url)
-		webbrowser.open(url, new=2, autoraise=False)
+		webbrowser.open(url, new=0, autoraise=False)
 
 	def log(self, msg):
 		print(msg)

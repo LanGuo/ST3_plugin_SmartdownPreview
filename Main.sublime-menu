@@ -1,7 +1,13 @@
 [
-{
-    "id" : "SmartDownPreview",
-    "caption" : "SmartDownPreview",
-    "command" : "smartdownpreview"
-}
+	{
+	  "id": "tools",
+	  "children": [{
+	    "id": "smartdown_tools",
+	    "caption": "Smartdown",
+	    "children": [{
+	      "caption": "Preview",
+	      "command": "smartdownpreview"
+	    }]
+	  }]
+	}
 ]
