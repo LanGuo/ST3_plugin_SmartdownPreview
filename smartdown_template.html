@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html ng-app="standalone" lang="en" xmanifest="manifest.appcache" ng-strict-di>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+  <base href="http://smartdown.site/">
+
+  <title>$title</title>
+
+  <!-- link rel="shortcut icon" href="favicon.ico" / -->
+  <!-- Use Bootstrap CSS for this page's look -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <link rel=stylesheet href="http://smartdown.site/lib/smartdown.css">
+  <script src="http://smartdown.site/lib/smartdown.js"></script>
+
+  <script type="text/x-smartdown" id="SmartdownPreview">
+     $content
+  </script>
+
+</head>
+
+<body style="margin:0;padding:0;background:#FEFEFE;">
+  <div class="container-fluid" style="margin:0;padding:15px;">
+    <div class="col-xs-12">
+        <div class="smartdown-container" id="smartdown-output">
+    </div>
+  </div>
+  
+  <script>
+  /* global smartdown */
+  /*
+  var icons = {
+    'hypercube': 'assets/img/Hypercube.svg',
+    'StalactiteStalagmite': 'assets/img/StalactiteStalagmite.svg'
+  };
+  */
+  var icons = {};
+  var baseURL = 'http://smartdown.site/';
+  var multiparts = null;
+  
+  function exampleLoaded() {
+    /* eslint no-invalid-this: 0 */
+    // var sourceText = this.responseText;
+    multiparts = smartdown.partitionMultipart(sourceText);
+    var output = document.getElementById('smartdown-output');
+    smartdown.setHome(multiparts._default_, output, function() {
+    });
+  }
+  function loadURL(url) {
+    var oReq = new XMLHttpRequest();
+    oReq.addEventListener("load", exampleLoaded);
+    oReq.open("GET", url);
+    oReq.send();
+  }
+  function loadInline() {
+    smartdown.loadCardsFromDocumentScripts();
+    var s = smartdown.smartdownScripts[0];
+    multiparts = smartdown.partitionMultipart(s.text);
+    var output = document.getElementById('smartdown-output');
+    smartdown.setHome(multiparts._default_, output, function() {
+    });
+  }
+  function loadExample() {
+    // loadURL('blog/home.md');
+    exampleLoaded();
+  }
+
+  function cardLoader(cardKey) {
+    var part = multiparts[cardKey];
+    if (part) {
+      var output = document.getElementById('smartdown-output');
+      smartdown.setHome(part, output, function() {
+        // smartdown.startAutoplay(renderElement);
+      });
+    }
+    else {
+      var cardURL = cardKey;
+      console.log('cardURL', cardURL);
+      if (cardKey.indexOf('http') === 0) {
+        cardURL = cardKey;
+      }
+      loadURL(cardURL);
+    }
+  }
+
+  function calcWikidata(key, body, done) {
+    function lookupComplete() {
+      /* eslint no-invalid-this: 0 */
+      var lookupResult = this.responseText;
+      var parsedResult = JSON.parse(lookupResult).query.pages;
+      var thumbs = [];
+      parsedResult.forEach(function(val, idx) {
+        if (val.thumbnail) {
+          thumbs.push(val.thumbnail.source);
+        }
+      });
+      done(thumbs);
+    }
+    var wdKey = body;
+    if (body.indexOf('[') === 0) {
+      var possibleJSONArray = JSON.parse(body);
+      if (Array.isArray(possibleJSONArray)) {
+        wdKey = '';
+        possibleJSONArray.forEach(function(val, idx) {
+          wdKey += val;
+          if (idx < possibleJSONArray.length - 1) {
+            wdKey += '|';
+          }
+        });
+      }
+    }
+    var oReq = new XMLHttpRequest();
+    oReq.addEventListener("load", lookupComplete);
+    var url = 'https://en.wikipedia.org/w/api.php?action=query&formatversion=2&prop=pageimages%7Cpageterms&';
+    url += 'titles=' + encodeURI(wdKey);  // Albert%20Einstein%7CAlbert%20Ellis%7CAlbert%20Estopinal';
+    url += '&pilimit=3&piprop=thumbnail&wbptterms=description&redirects=&format=json&origin=*';
+    oReq.open('GET', url);
+    oReq.send();
+  }
+  var calcHandlers = {
+    wikidata: calcWikidata
+  };
+  smartdown.initialize(icons, baseURL, loadInline, cardLoader, calcHandlers);
+  </script>
+  
+  <!-- script src="http://smartdown.site/assets/js/jquery/jquery.min.js"></script -->
+  <!-- script src="http://smartdown.site/assets/js/bootstrap/bootstrap.min.js"></script -->
+
+</body>
+</html>
