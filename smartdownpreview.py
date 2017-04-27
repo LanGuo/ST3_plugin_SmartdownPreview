@@ -10,12 +10,12 @@ import os
 import pdb
 
 class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.EventListener):
-	
+
 	# if outputMode is 'html', save out an html file; if outputMode is 'dataURI', open a browser for preview using smartdown.site
 	outputMode = 'html' #'dataURI'
 
 	# Template location is within the same package, this is hard coded!
-	html_template = os.path.join(os.path.expanduser("~"), 'Library', 'Application Support', 'Sublime Text 3', 'Packages', 'SmartDownPreview', 'smartdown_template.html') 
+	html_template = os.path.join(os.path.expanduser("~"), 'Library', 'Application Support', 'Sublime Text 3', 'Packages', 'SmartDownPreview', 'smartdown_template.html')
 	#this html template contains placeholder for title and content
 
 	#def on_post_save(self, view):
@@ -33,6 +33,8 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 			previewFileFullPath = os.path.join(self.previewFilePath, "{}.html".format(currentFileName))
 			html_string = self.generate_html(title=currentFileName, content=content)
 			self.save_tmp_file(html_string, outFilePath=previewFileFullPath)
+			full_url = 'file://' + previewFileFullPath
+			self.openUrl(full_url)
 
 		else:
 			self.log('This file is not SmartDown format!')
@@ -40,11 +42,11 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 
 	def generate_html(self, title, content):
 		'''
-		Generates an html file from template and current file content, saves it locally. 
-		'''	
+		Generates an html file from template and current file content, saves it locally.
+		'''
 		html_template = open(self.html_template, "r").read()
 		#pdb.set_trace()
-		# Replace title and content in template with actual file we're editing 
+		# Replace title and content in template with actual file we're editing
 		preview_html = html_template.replace('$title', title)
 		preview_html = preview_html.replace('$content', content)
 		return preview_html
