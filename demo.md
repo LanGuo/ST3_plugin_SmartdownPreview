@@ -22,12 +22,7 @@ Use the navigation buttons below to explore different aspects of Smartdown.
 - [Cells](:@Cells)
 - [Plotly](:@Plotly)
 - [P5](:@P5)
-
-### GIF Example
-
-I'm experimenting with incorporating GIFs for the purpose of building a tutorial.
-
-![player](https://unpkg.com/smartdown/docs/lib/example/intro.gif)
+- [Tweet](:@Tweet)
 
 
 # SVG
@@ -492,6 +487,22 @@ p5.draw = function () {
 
 ```
 
+
+---
+
+[Back to Home](:@Home)
+
+
+
+# Tweet
+---
+
+### Tweet Example
+
+Testing out lazy loading of Twitter library.
+
+- [](https://twitter.com/mrdatascience/status/857681153872072705&showMedia)
+- [](https://twitter.com/mrdatascience/status/858010008017154049&showMedia)
 
 ---
 
