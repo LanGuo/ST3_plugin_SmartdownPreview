@@ -8,6 +8,16 @@ import webbrowser
 import base64
 import os
 import pdb
+from string import Template
+
+useLocal = False
+
+if useLocal:
+	smartdownSiteURL = 'http://127.0.0.1:8080/lib/'
+	smartdownModulePrefix = smartdownSiteURL
+else:
+	smartdownSiteURL = 'https://smartdown.site/'
+	smartdownModulePrefix = 'https://smartdown.site/lib/'
 
 class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.EventListener):
 
@@ -26,12 +36,16 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 			#full_url = self.generate_url()
 			#preview = self.openUrl(full_url)
 			currentFileName = os.path.basename(self.currentFilePath)
-			content = open(self.currentFilePath, "r").read()
+			content = open(self.currentFilePath, "r", encoding='utf-8').read()
 			self.previewFilePath = os.path.join(os.path.expanduser("~"), 'tmp')
 			if not os.path.exists(self.previewFilePath):
 				os.mkdir(self.previewFilePath)
 			previewFileFullPath = os.path.join(self.previewFilePath, "{}.html".format(currentFileName))
-			html_string = self.generate_html(title=currentFileName, content=content)
+			html_string = self.generate_html(
+									title=currentFileName,
+									content=content,
+									smartdownSiteURL=smartdownSiteURL,
+									smartdownModulePrefix=smartdownModulePrefix)
 			self.save_tmp_file(html_string, outFilePath=previewFileFullPath)
 			full_url = 'file://' + previewFileFullPath
 			self.openUrl(full_url)
@@ -40,19 +54,27 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 			self.log('This file is not SmartDown format!')
 			pass
 
-	def generate_html(self, title, content):
+	def generate_html(self, title, content, smartdownSiteURL, smartdownModulePrefix):
 		'''
 		Generates an html file from template and current file content, saves it locally.
 		'''
 		html_template = open(self.html_template, "r").read()
+		preview_html = Template(html_template).substitute(
+							title=title,
+							content=content,
+							smartdownSiteURL=smartdownSiteURL,
+							smartdownModulePrefix=smartdownModulePrefix)
+
 		#pdb.set_trace()
 		# Replace title and content in template with actual file we're editing
-		preview_html = html_template.replace('$title', title)
-		preview_html = preview_html.replace('$content', content)
+		# preview_html = html_template.replace('$title', title)
+		# preview_html = preview_html.replace('$content', content)
+		# preview_html = preview_html.replace('$smartdownSiteURL', smartdownSiteURL)
+		# preview_html = preview_html.replace('$smartdownModulePrefix', smartdownModulePrefix)
 		return preview_html
 
 	def save_tmp_file(self, string, outFilePath):
-		with open(outFilePath, 'w') as outFile:
+		with open(outFilePath, 'w', encoding='utf-8') as outFile:
 			outFile.write(string)
 
 

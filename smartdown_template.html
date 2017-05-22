@@ -7,18 +7,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-  <base href="http://smartdown.site/">
+  <base href="${smartdownSiteURL}">
 
-  <title>$title</title>
+  <title>${title}</title>
 
   <!-- link rel="shortcut icon" href="favicon.ico" / -->
   <!-- Use Bootstrap CSS for this page's look -->
 
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <link rel=stylesheet href="https://unpkg.com/smartdown@0.0.24/docs/lib/smartdown.css">
-  <script src="https://unpkg.com/smartdown@0.0.24/docs/lib/smartdown.js"></script>
+  <link rel=stylesheet href="${smartdownModulePrefix}smartdown.css">
+  <script src="${smartdownModulePrefix}smartdown.js"></script>
 
-  <script type="text/x-smartdown" id="SmartdownPreview">$content</script>
+  <script type="text/x-smartdown" id="SmartdownPreview">${content}</script>
 </head>
 
 <body style="margin:0;padding:0;background:#FEFEFE;">
@@ -30,7 +30,7 @@
 
   <script>
   /* global smartdown */
-  var baseURL = 'https://unpkg.com/smartdown@0.0.24/docs/';
+  var baseURL = 'https://smartdown.site/';
   var icons = {
     'hypercube': baseURL + 'lib/example/Hypercube.svg',
     'StalactiteStalagmite': baseURL + 'lib/example/StalactiteStalagmite.svg'
@@ -43,6 +43,7 @@
     multiparts = smartdown.partitionMultipart(sourceText);
     var output = document.getElementById('smartdown-output');
     smartdown.setHome(multiparts._default_, output, function() {
+      smartdown.startAutoplay(output);
     });
   }
   function loadURL(url) {
@@ -57,6 +58,7 @@
     multiparts = smartdown.partitionMultipart(s.text);
     var output = document.getElementById('smartdown-output');
     smartdown.setHome(multiparts._default_, output, function() {
+      smartdown.startAutoplay(output);
     });
   }
   function loadExample() {
