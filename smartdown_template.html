@@ -1,127 +1,181 @@
-<!DOCTYPE html>
-<html ng-app="standalone" lang="en" xmanifest="manifest.appcache" ng-strict-di>
+<!doctype html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-  <base href="${smartdownSiteURL}">
+  <base href="${smartdownSite}/lib/">
 
   <title>${title}</title>
 
-  <!-- link rel="shortcut icon" href="favicon.ico" / -->
-  <!-- Use Bootstrap CSS for this page's look -->
-
+  <!-- Latest compiled and minified CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <link rel=stylesheet href="${smartdownModulePrefix}smartdown.css">
-  <script src="${smartdownModulePrefix}smartdown.js"></script>
 
-  <script type="text/x-smartdown" id="SmartdownPreview">${content}</script>
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+  <link rel="stylesheet" href="smartdown.css">
+  <script src="smartdown.js"></script>
+  <script src="calc_handlers.js"></script>
+
+  ${escapedScripts}
+
 </head>
 
-<body style="margin:0;padding:0;background:#FEFEFE;">
-  <div class="container-fluid" style="margin:0;padding:15px;">
-    <div class="col-xs-12">
-        <div class="smartdown-container" id="smartdown-output">
+<body
+  style="margin:0;padding:0;background:white;">
+
+  <div
+    class="container-fluid"
+    style="margin:0;padding:0;">
+    <div
+      class="smartdown-container"
+      id="smartdown-output">
     </div>
   </div>
 
   <script>
-  /* global smartdown */
-  var baseURL = 'https://smartdown.site/';
-  var icons = {
-    'hypercube': baseURL + 'lib/example/Hypercube.svg',
-    'StalactiteStalagmite': baseURL + 'lib/example/StalactiteStalagmite.svg'
+/* eslint-disable */
+/* global smartdown */
+
+if (!String.prototype.endsWith) {
+  String.prototype.endsWith = function(searchStr, Position) {
+      // This works much better than >= because
+      // it compensates for NaN:
+      if (!(Position < this.length))
+        Position = this.length;
+      else
+        Position |= 0; // round position
+      return this.substr(Position - searchStr.length,
+                         searchStr.length) === searchStr;
   };
-  var multiparts = null;
+}
 
-  function exampleLoaded() {
-    /* eslint no-invalid-this: 0 */
-    // var sourceText = this.responseText;
-    multiparts = smartdown.partitionMultipart(sourceText);
+var baseURL = '${smartdownSite}/';
+var svgIcons = {
+  'hypercube': baseURL + '/lib/resources/Hypercube.svg',
+  'StalactiteStalagmite': baseURL + '/lib/resources/StalactiteStalagmite.svg',
+  'church': baseURL + '/lib/resources/church.svg',
+  'lighthouse': baseURL + '/lib/resources/lighthouse.svg',
+  'barn': baseURL + '/lib/resources/barn.svg',
+  'medieval-gate': baseURL + '/lib/resources/medieval-gate.svg'
+};
+
+var multiparts = {};
+
+
+//
+// Copied from https://github.com/jashkenas/underscore/blob/e944e0275abb3e1f366417ba8facb5754a7ad273/underscore.js#L1458
+//
+
+var unescapeMap = {
+  '&amp;' : '&',
+  '&lt;' : '<',
+  '&gt;' : '>',
+  '&quot;' : '"',
+  '&#x27;' : "'",
+  '&#x60;' : '`'
+};
+
+// Functions for escaping and unescaping strings to/from HTML interpolation.
+var createEscaper = function(map) {
+  var escaper = function(match) {
+    return map[match];
+  };
+  // Regexes for identifying a key that needs to be escaped.
+  var source = '(?:' + Object.keys(map).join('|') + ')';
+  var testRegexp = RegExp(source);
+  var replaceRegexp = RegExp(source, 'g');
+  return function(string) {
+    string = string == null ? '' : '' + string;
+    return testRegexp.test(string) ? string.replace(replaceRegexp, escaper) : string;
+  };
+};
+var unescape = createEscaper(unescapeMap);
+
+var scriptMap;
+
+function loadInline() {
+  smartdown.loadCardsFromDocumentScripts();
+  scriptMap = {};
+  smartdown.smartdownScripts.forEach(function(s) {
+    scriptMap[s.id] = s.text;
+  });
+  console.log('scriptMap', scriptMap);
+  var text = scriptMap['Home.md'];
+  text = unescape(text);
+  multiparts = smartdown.partitionMultipart(text);
+  var output = document.getElementById('smartdown-output');
+  smartdown.setHome(multiparts._default_, output, function() {
+    smartdown.startAutoplay(output);
+  });
+}
+
+
+function cardLoaded(sourceText, cardKey, cardURL) {
+  /* eslint no-invalid-this: 0 */
+  multiparts = smartdown.partitionMultipart(sourceText);
+  var output = document.getElementById('smartdown-output');
+  smartdown.setHome(multiparts._default_, output, function() {
+    smartdown.startAutoplay(output);
+    window.location.hash = '#' + cardKey;
+  });
+}
+
+function relativeCardLoader(cardKey) {
+  var part = multiparts[cardKey];
+  if (part) {
     var output = document.getElementById('smartdown-output');
-    smartdown.setHome(multiparts._default_, output, function() {
+    smartdown.setHome(part, output, function() {
       smartdown.startAutoplay(output);
     });
   }
-  function loadURL(url) {
-    var oReq = new XMLHttpRequest();
-    oReq.addEventListener("load", exampleLoaded);
-    oReq.open("GET", url);
-    oReq.send();
-  }
-  function loadInline() {
-    smartdown.loadCardsFromDocumentScripts();
-    var s = smartdown.smartdownScripts[0];
-    multiparts = smartdown.partitionMultipart(s.text);
-    var output = document.getElementById('smartdown-output');
-    smartdown.setHome(multiparts._default_, output, function() {
-      smartdown.startAutoplay(output);
-    });
-  }
-  function loadExample() {
-    // loadURL('blog/home.md');
-    exampleLoaded();
-  }
-
-  function cardLoader(cardKey) {
-    var part = multiparts[cardKey];
-    if (part) {
-      var output = document.getElementById('smartdown-output');
-      smartdown.setHome(part, output, function() {
-        smartdown.startAutoplay(output);
+  else {
+    var cardURL = window.location.origin + window.location.pathname + cardKey + '.md';
+    if (cardKey.indexOf('http') === 0) {
+      cardURL = cardKey;
+      var oReq = new XMLHttpRequest();
+      oReq.addEventListener("load", function() {
+        cardLoaded(this.responseText, cardKey, cardURL);
       });
+      oReq.open("GET", cardURL);
+      oReq.send();
     }
     else {
-      var cardURL = cardKey;
-      console.log('cardURL', cardURL);
-      if (cardKey.indexOf('http') === 0) {
-        cardURL = cardKey;
+      if (!cardKey.endsWith('.md')) {
+        cardKey += '.md';
       }
-      loadURL(cardURL);
+      var text = scriptMap[cardKey];
+      text = unescape(text);
+      multiparts = smartdown.partitionMultipart(text);
+      cardLoaded(text, cardKey, cardURL);
     }
   }
+}
 
-  function calcWikidata(key, body, done) {
-    function lookupComplete() {
-      /* eslint no-invalid-this: 0 */
-      var lookupResult = this.responseText;
-      var parsedResult = JSON.parse(lookupResult).query.pages;
-      var thumbs = [];
-      parsedResult.forEach(function(val, idx) {
-        if (val.thumbnail) {
-          thumbs.push(val.thumbnail.source);
-        }
-      });
-      done(thumbs);
-    }
-    var wdKey = body;
-    if (body.indexOf('[') === 0) {
-      var possibleJSONArray = JSON.parse(body);
-      if (Array.isArray(possibleJSONArray)) {
-        wdKey = '';
-        possibleJSONArray.forEach(function(val, idx) {
-          wdKey += val;
-          if (idx < possibleJSONArray.length - 1) {
-            wdKey += '|';
-          }
-        });
-      }
-    }
-    var oReq = new XMLHttpRequest();
-    oReq.addEventListener("load", lookupComplete);
-    var url = 'https://en.wikipedia.org/w/api.php?action=query&formatversion=2&prop=pageimages%7Cpageterms&';
-    url += 'titles=' + encodeURI(wdKey);  // Albert%20Einstein%7CAlbert%20Ellis%7CAlbert%20Estopinal';
-    url += '&pilimit=3&piprop=thumbnail&wbptterms=description&redirects=&format=json&origin=*';
-    oReq.open('GET', url);
-    oReq.send();
+function loadHome() {
+  smartdown.loadCardsFromDocumentScripts();
+  scriptMap = {};
+  smartdown.smartdownScripts.forEach(function(s) {
+    scriptMap[s.id] = s.text;
+  });
+  var hash = window.parent.location.hash || window.location.hash;
+  if (hash === '') {
+    hash = 'Home';
   }
-  var calcHandlers = {
-    wikidata: calcWikidata
-  };
-  smartdown.initialize(icons, baseURL, loadInline, cardLoader, calcHandlers);
+  hash = hash.replace(/^#/, '');
+  relativeCardLoader(hash);
+}
+
+var calcHandlers = smartdown.defaultCalcHandlers;
+const linkRules = [
+${mediaLinkRules}
+];
+
+smartdown.initialize(svgIcons, baseURL, loadHome, relativeCardLoader, calcHandlers, linkRules);
+
   </script>
 
 </body>
