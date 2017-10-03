@@ -171,7 +171,7 @@ This example enables the user to enter an alternate Title, which is associated w
 
 ---
 
-```plotly
+```plotly/playable
 var layout = {
     title: 'Default Title',
     autosize: true,
@@ -195,7 +195,7 @@ Plotly.plot( this.div, [{
 From [3D Surface Plots](https://plot.ly/javascript/3d-surface-plots/)
 
 
-```plotly
+```plotly/playable
 
 var myDiv = this.div;
 Plotly.d3.csv('https://raw.githubusercontent.com/plotly/datasets/master/api_docs/mt_bruno_elevation.csv', function(err, rows){
@@ -234,7 +234,7 @@ Plotly.d3.csv('https://raw.githubusercontent.com/plotly/datasets/master/api_docs
 
 ### Simple Contour Plot
 
-```plotly
+```plotly/playable
 var myDiv = this.div;
 
 var size = 100, x = new Array(size), y = new Array(size), z = new Array(size), i, j;
@@ -279,7 +279,7 @@ Plotly.newPlot(myDiv, data, layout, {displayModeBar: true});
 From [Chloropleth Map](https://plot.ly/javascript/choropleth-maps)
 
 
-```plotly
+```plotly/playable
 
 var myDiv = this.div;
 Plotly.d3.csv(
