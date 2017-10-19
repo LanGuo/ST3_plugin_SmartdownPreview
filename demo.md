@@ -1,6 +1,8 @@
-
 # Home
 ---
+
+[README](:@README)
+![](/block/NewGistBlock.png)
 
 ## Welcome to Smartdown
 
