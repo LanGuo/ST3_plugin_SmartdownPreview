@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -64,6 +64,7 @@ var svgIcons = {
 };
 
 var multiparts = {};
+var inhibitHash = '';
 
 
 //
@@ -97,30 +98,17 @@ var unescape = createEscaper(unescapeMap);
 
 var scriptMap;
 
-function loadInline() {
-  smartdown.loadCardsFromDocumentScripts();
-  scriptMap = {};
-  smartdown.smartdownScripts.forEach(function(s) {
-    scriptMap[s.id] = s.text;
-  });
-  console.log('scriptMap', scriptMap);
-  var text = scriptMap['Home.md'];
-  text = unescape(text);
-  multiparts = smartdown.partitionMultipart(text);
-  var output = document.getElementById('smartdown-output');
-  smartdown.setHome(multiparts._default_, output, function() {
-    smartdown.startAutoplay(output);
-  });
-}
-
 
 function cardLoaded(sourceText, cardKey, cardURL) {
+  document.body.scrollTop = 0; // For Chrome, Safari and Opera
+  document.documentElement.scrollTop = 0; // For IE and Firefox
   /* eslint no-invalid-this: 0 */
   multiparts = smartdown.partitionMultipart(sourceText);
   var output = document.getElementById('smartdown-output');
   smartdown.setHome(multiparts._default_, output, function() {
     smartdown.startAutoplay(output);
-    window.location.hash = '#' + cardKey;
+    inhibitHash = '#' + cardKey;
+    window.location.hash = inhibitHash;
   });
 }
 
@@ -159,11 +147,17 @@ function loadHome() {
   smartdown.loadCardsFromDocumentScripts();
   scriptMap = {};
   smartdown.smartdownScripts.forEach(function(s) {
-    scriptMap[s.id] = s.text;
+    var text = s.text;
+    if ('${hasREADMEAndHome}' === 'True') {
+      if (s.id === 'README.md') {
+        text += '\n\n---\n\n[Back to Home](:@Home)\n\n';
+      }
+    }
+    scriptMap[s.id] = text;
   });
   var hash = window.parent.location.hash || window.location.hash;
   if (hash === '') {
-    hash = 'Home';
+    hash = '${base}';
   }
   hash = hash.replace(/^#/, '');
   relativeCardLoader(hash);
@@ -173,6 +167,13 @@ var calcHandlers = smartdown.defaultCalcHandlers;
 const linkRules = [
 ${mediaLinkRules}
 ];
+
+function locationHashChanged() {
+  if (inhibitHash !== location.hash) {
+    relativeCardLoader(location.hash.slice(1));
+  }
+}
+window.onhashchange = locationHashChanged;
 
 smartdown.initialize(svgIcons, baseURL, loadHome, relativeCardLoader, calcHandlers, linkRules);
 

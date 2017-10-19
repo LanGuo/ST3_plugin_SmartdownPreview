@@ -9,7 +9,9 @@ import base64
 import os
 import glob
 import pdb
+import time
 import cgi
+import re
 from string import Template
 
 useLocal = False
@@ -24,11 +26,11 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 	# if outputMode is 'html', save out an html file; if outputMode is 'dataURI', open a browser for preview using smartdown.site
 	outputMode = 'html' #'dataURI'
 
-	# Template location is within the same package
-	html_template_path = os.path.join(sublime.packages_path(), 'SmartDownPreview', 'smartdown_template.html')
-
 	#def on_post_save(self, view):
 	def run(self, edit):
+		# Template location is within the same package
+		self.html_template_path = os.path.join(sublime.packages_path(), 'SmartDownPreview', 'smartdown_template.html')
+
 		# saved file name, fullpath to the file being edited and saved
 		self.currentFilePath = self.view.file_name()
 		if self.currentFilePath.endswith('.md') or self.currentFilePath.endswith('.mmd'):
@@ -41,31 +43,55 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 
 			currentFileDirectory = os.path.dirname(self.currentFilePath)
 
-
 			def build_content_item(filepath):
 				content = open(filepath, "r", encoding='utf-8').read()
 				return {'id': os.path.basename(filepath), 'text': content}
 
 			siblingContentItems = list(map(build_content_item, glob.glob(currentFileDirectory + '/*.md')))
-			# for f in siblingContentItems:
-			# 	print('...content', f['id'], f['text'][:20])
+			foundBase = False
+			foundHome = False
+			foundREADME = False
+			for f in siblingContentItems:
+				print('...content', f['id'], f['text'][:20])
+				if f['id'] == 'Home.md':
+					foundHome = True
+				if f['id'] == currentFileName:
+					foundBase = True
+				if f['id'] == 'README.md':
+					foundREADME = True
+
+			if foundBase:
+				base = currentFileName
+			else:
+				base = re.sub('\.md$', currentFileName, '')
+				siblingContentItems = [build_content_item(self.currentFilePath)]
 
 			def build_media_item(filepath):
 				b64data = base64.b64encode(open(filepath, "rb").read())
-				mimetype = 'image/png'
+				if filepath.endswith('.png'):
+					mimetype = 'image/png'
+				if filepath.endswith('.gif'):
+					mimetype = 'image/gif'
 				dataURI = u'data:%s;base64,' % mimetype
 				dataURI += b64data.decode('utf-8')
 				return {'id': os.path.basename(filepath), 'text': dataURI}
 
-			siblingMediaItems = list(map(build_media_item, glob.glob(currentFileDirectory + '/*.png')))
+			media_files = glob.glob(currentFileDirectory + '/*.png') + glob.glob(currentFileDirectory + '/*.gif')
+			siblingMediaItems = list(map(build_media_item, media_files))
 			# for f in siblingMediaItems:
 			# 	print('...media', f['id'], f['text'][:20])
+			if not foundHome:
+				siblingMediaItems = []
 
+			print('foundHome', foundHome, ' foundREADME', foundREADME)
+			hasREADMEAndHome = foundHome and foundREADME
 			html_string = self.generate_html(
 									title=currentFileName,
+									base=base,
 									contentItems=siblingContentItems,
 									mediaItems=siblingMediaItems,
-									smartdownSite=smartdownSite)
+									smartdownSite=smartdownSite,
+									hasREADMEAndHome=hasREADMEAndHome)
 			self.save_tmp_file(html_string, outFilePath=previewFileFullPath)
 			full_url = 'file://' + previewFileFullPath
 			self.openUrl(full_url, currentFileName)
@@ -75,7 +101,7 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 			pass
 
 
-	def generate_html(self, title, contentItems, mediaItems, smartdownSite):
+	def generate_html(self, title, base, contentItems, mediaItems, smartdownSite, hasREADMEAndHome):
 		'''
 		Generates an html file from template and current file content, saves it locally.
 		'''
@@ -100,9 +126,11 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 		html_template = open(self.html_template_path, "r").read()
 		preview_html = Template(html_template).substitute(
 							title=title,
+							base=base,
 							escapedScripts='\n\n\n\n'.join(escapedScripts),
 							mediaLinkRules=mediaLinkRules,
-							smartdownSite=smartdownSite)
+							smartdownSite=smartdownSite,
+							hasREADMEAndHome=hasREADMEAndHome)
 
 
 		#pdb.set_trace()
@@ -121,6 +149,17 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 		url += '#' + currentFileName
 		self.log('Opening '+url)
 		webbrowser.open(url, new=0, autoraise=False)
+		# https://docs.python.org/2/library/webbrowser.html
+		# firefox = webbrowser.get('firefox')
+		# firefox.open(url, new=0, autoraise=False)
+		# time.sleep(1)
+		# chrome_cmd = "open -a /Applications/Google\ Chrome.app \'%s\'" % url
+		# print('###', chrome_cmd)
+		# os.system(chrome_cmd)
+		# time.sleep(1)
+		# safari = webbrowser.get('safari')
+		# safari.open(url, new=0, autoraise=False)
+		# time.sleep(1)
 
 	def log(self, msg):
 		print(msg)
