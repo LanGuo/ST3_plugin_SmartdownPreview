@@ -10,18 +10,27 @@
 
   <title>${title}</title>
 
-  <!-- Latest compiled and minified CSS -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-
-  <!-- Optional theme -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
   <link rel="stylesheet" href="smartdown.css">
+
+<!--
+  <script>
+    window.godownBase = 'http://127.0.0.1:8484/';
+  </script>
+  <script src="http://127.0.0.1:8484/godown.js"></script>
+-->
+
+  <script>
+    window.godownBase = 'https://rawgit.com/DoctorBud/godown/master/godown/';
+  </script>
+  <script src="https://rawgit.com/DoctorBud/godown/master/godown/godown.js"></script>
+
   <script src="smartdown.js"></script>
   <script src="calc_handlers.js"></script>
 
   ${escapedScripts}
-
 </head>
 
 <body
@@ -36,148 +45,11 @@
     </div>
   </div>
 
+  <script src="inline_helper.js"></script>
   <script>
-/* eslint-disable */
-/* global smartdown */
-
-if (!String.prototype.endsWith) {
-  String.prototype.endsWith = function(searchStr, Position) {
-      // This works much better than >= because
-      // it compensates for NaN:
-      if (!(Position < this.length))
-        Position = this.length;
-      else
-        Position |= 0; // round position
-      return this.substr(Position - searchStr.length,
-                         searchStr.length) === searchStr;
-  };
-}
-
-var baseURL = '${smartdownSite}/';
-var svgIcons = {
-  'hypercube': baseURL + '/lib/resources/Hypercube.svg',
-  'StalactiteStalagmite': baseURL + '/lib/resources/StalactiteStalagmite.svg',
-  'church': baseURL + '/lib/resources/church.svg',
-  'lighthouse': baseURL + '/lib/resources/lighthouse.svg',
-  'barn': baseURL + '/lib/resources/barn.svg',
-  'medieval-gate': baseURL + '/lib/resources/medieval-gate.svg'
-};
-
-var multiparts = {};
-var inhibitHash = '';
-
-
-//
-// Copied from https://github.com/jashkenas/underscore/blob/e944e0275abb3e1f366417ba8facb5754a7ad273/underscore.js#L1458
-//
-
-var unescapeMap = {
-  '&amp;' : '&',
-  '&lt;' : '<',
-  '&gt;' : '>',
-  '&quot;' : '"',
-  '&#x27;' : "'",
-  '&#x60;' : '`'
-};
-
-// Functions for escaping and unescaping strings to/from HTML interpolation.
-var createEscaper = function(map) {
-  var escaper = function(match) {
-    return map[match];
-  };
-  // Regexes for identifying a key that needs to be escaped.
-  var source = '(?:' + Object.keys(map).join('|') + ')';
-  var testRegexp = RegExp(source);
-  var replaceRegexp = RegExp(source, 'g');
-  return function(string) {
-    string = string == null ? '' : '' + string;
-    return testRegexp.test(string) ? string.replace(replaceRegexp, escaper) : string;
-  };
-};
-var unescape = createEscaper(unescapeMap);
-
-var scriptMap;
-
-
-function cardLoaded(sourceText, cardKey, cardURL) {
-  document.body.scrollTop = 0; // For Chrome, Safari and Opera
-  document.documentElement.scrollTop = 0; // For IE and Firefox
-  /* eslint no-invalid-this: 0 */
-  multiparts = smartdown.partitionMultipart(sourceText);
-  var output = document.getElementById('smartdown-output');
-  smartdown.setHome(multiparts._default_, output, function() {
-    smartdown.startAutoplay(output);
-    inhibitHash = '#' + cardKey;
-    window.location.hash = inhibitHash;
-  });
-}
-
-function relativeCardLoader(cardKey) {
-  var part = multiparts[cardKey];
-  if (part) {
-    var output = document.getElementById('smartdown-output');
-    smartdown.setHome(part, output, function() {
-      smartdown.startAutoplay(output);
-    });
-  }
-  else {
-    var cardURL = window.location.origin + window.location.pathname + cardKey + '.md';
-    if (cardKey.indexOf('http') === 0) {
-      cardURL = cardKey;
-      var oReq = new XMLHttpRequest();
-      oReq.addEventListener("load", function() {
-        cardLoaded(this.responseText, cardKey, cardURL);
-      });
-      oReq.open("GET", cardURL);
-      oReq.send();
-    }
-    else {
-      if (!cardKey.endsWith('.md')) {
-        cardKey += '.md';
-      }
-      var text = scriptMap[cardKey];
-      text = unescape(text);
-      multiparts = smartdown.partitionMultipart(text);
-      cardLoaded(text, cardKey, cardURL);
-    }
-  }
-}
-
-function loadHome() {
-  smartdown.loadCardsFromDocumentScripts();
-  scriptMap = {};
-  smartdown.smartdownScripts.forEach(function(s) {
-    var text = s.text;
-    if ('${hasREADMEAndHome}' === 'True') {
-      if (s.id === 'README.md') {
-        text += '\n\n---\n\n[Back to Home](:@Home)\n\n';
-      }
-    }
-    scriptMap[s.id] = text;
-  });
-  var hash = window.parent.location.hash || window.location.hash;
-  if (hash === '') {
-    hash = '${base}';
-  }
-  hash = hash.replace(/^#/, '');
-  relativeCardLoader(hash);
-}
-
-var calcHandlers = smartdown.defaultCalcHandlers;
-const linkRules = [
-${mediaLinkRules}
-];
-
-function locationHashChanged() {
-  if (inhibitHash !== location.hash) {
-    relativeCardLoader(location.hash.slice(1));
-  }
-}
-window.onhashchange = locationHashChanged;
-
-smartdown.initialize(svgIcons, baseURL, loadHome, relativeCardLoader, calcHandlers, linkRules);
-
+    smartdown.setLinkRules([
+      ${mediaLinkRules}
+    ]);
   </script>
-
 </body>
 </html>
