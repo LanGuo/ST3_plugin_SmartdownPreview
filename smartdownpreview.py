@@ -68,6 +68,8 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 
 			def build_media_item(filepath):
 				b64data = base64.b64encode(open(filepath, "rb").read())
+				if filepath.endswith('.jpg') or filepath.endswith('.jpeg'):
+					mimetype = 'image/jpeg'
 				if filepath.endswith('.png'):
 					mimetype = 'image/png'
 				if filepath.endswith('.gif'):
@@ -76,7 +78,10 @@ class SmartdownpreviewCommand(sublime_plugin.TextCommand):  #sublime_plugin.Even
 				dataURI += b64data.decode('utf-8')
 				return {'id': os.path.basename(filepath), 'text': dataURI}
 
-			media_files = glob.glob(currentFileDirectory + '/*.png') + glob.glob(currentFileDirectory + '/*.gif')
+			media_files = glob.glob(currentFileDirectory + '/*.png') +  \
+							glob.glob(currentFileDirectory + '/*.gif') +  \
+							glob.glob(currentFileDirectory + '/*.jpeg') +  \
+							glob.glob(currentFileDirectory + '/*.jpg')
 			siblingMediaItems = list(map(build_media_item, media_files))
 			# for f in siblingMediaItems:
 			# 	print('...media', f['id'], f['text'][:20])
